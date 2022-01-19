@@ -1,0 +1,245 @@
+<html>
+    <head>
+        <title>Periodic Team Avatar</title>
+        <script>
+            const noblegases = {
+                helium: {
+                    number: '2',
+                    short: 'He',
+                    name: 'Helium',
+                    weight: '4.0026'
+                },
+                neon: {
+                    number: '10',
+                    short: 'Ne',
+                    name: 'Neon',
+                    weight: '20.180'
+                },
+                argon: {
+                    number: '18',
+                    short: 'Ar',
+                    name: 'Argon',
+                    weight: '39.948'
+                },
+                krypton: {
+                    number: '36',
+                    short: 'Kr',
+                    name: 'Krypton',
+                    weight: '83.798'
+                },
+                xenon: {
+                    number: '54',
+                    short: 'Xe',
+                    name: 'Xenon',
+                    weight: '131.29'
+                },
+                radon: {
+                    number: '86',
+                    short: 'Rn',
+                    name: 'Radon',
+                    weight: '(222)'
+                }
+            };
+
+            async function load(key) {
+                const noblegas = noblegases[key];
+                if(noblegas) {
+                    document.getElementById('avatar-name').value = noblegas.short;
+                    document.getElementById('avatar-team').value = noblegas.name;
+                    document.getElementById('avatar-number').value = noblegas.number;
+                    document.getElementById('avatar-weight').value = noblegas.weight;
+                    preview();
+                }
+            }
+
+            async function renderSVG() {
+                const avatar = document.getElementById('avatar');
+                // Apply design
+                const designs = document.body.querySelectorAll('input[name="avatar-design"]');
+                const ordinal = avatar.querySelector('#periodic-number');
+                switch([...designs].find(input => input.checked).value) {
+                    case 'square':
+                        avatar.querySelector('#periodic-square').style.display = 'block';
+                        avatar.querySelector('#periodic-circle').style.display = 'none';
+                        ordinal.setAttribute('text-anchor', 'left');
+                        ordinal.setAttribute('x', '16');
+                        break;
+                    case 'circle':
+                        avatar.querySelector('#periodic-square').style.display = 'none';
+                        avatar.querySelector('#periodic-circle').style.display = 'block';
+                        ordinal.setAttribute('text-anchor', 'middle');
+                        ordinal.setAttribute('x', '50%');
+                        break;
+                }
+                
+                // Apply colors
+                avatar.style.setProperty('--color-stroke', document.getElementById('avatar-color-stroke').value);
+                avatar.style.setProperty('--color-fill', document.getElementById('avatar-color-fill').value);
+                avatar.style.setProperty('--color-text', document.getElementById('avatar-color-text').value);
+                // Apply text
+                avatar.querySelector('#periodic-name').textContent = document.getElementById('avatar-name').value;
+                avatar.querySelector('#periodic-description').textContent = document.getElementById('avatar-team').value;
+                avatar.querySelector('#periodic-number').textContent = document.getElementById('avatar-number').value;
+                avatar.querySelector('#periodic-weight').textContent = document.getElementById('avatar-weight').value;
+
+                const blob = new Blob([ avatar.outerHTML ], { type: 'image/svg+xml' });
+                return URL.createObjectURL(blob);
+            }
+
+            async function renderPNG() {
+                return new Promise(async resolve => {
+                    const img = new Image();
+                    img.onload = function() {
+                        const canvas = document.createElement('canvas');
+                        canvas.width = img.width;
+                        canvas.height = img.height;
+                        canvas.getContext('2d').drawImage(img, 0, 0, img.width, img.height);
+                        URL.revokeObjectURL(img.src);
+                        resolve(canvas.toDataURL('image/png'));
+                    };
+                    img.src = await renderSVG();
+                });
+            }
+
+            async function preview() {
+                document.getElementById('preview').src = await renderPNG(); // await renderSVG();
+            }
+
+            window.addEventListener('DOMContentLoaded', () => preview());
+        </script>
+        <style>
+            body {
+                margin: 2em;
+                font-family: sans-serif;
+            }
+            #container {
+                display: flex;
+            }
+            #panel-left {
+                flex: 0;
+                padding: 0.5em;
+            }
+            #panel-right {
+                flex: 0;
+                padding: 0.5em;
+            }
+            #panel-right table tr td {
+                padding: 0.25em;
+                white-space: nowrap;
+            }
+            #spacer {
+                flex: 100;
+            }
+            #avatar {
+                display: none;
+            }
+            #preview {
+                width: 256;
+                height: 256;
+                background: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAQklEQVRYw+3VsQkAMQwDQCf8QB7RI3qj/BAuQuDUCw5UaFXViUEyc1KPHZcDAAAAAAAA8E3/vLtNAAAAAAAA8DbgB9xaBlH4kXmsAAAAAElFTkSuQmCC') center repeat;
+                background-size: 16px;
+            }
+            #controls {
+                text-align: center;
+            }
+            .template {
+                display: inline-block;
+                border: 1px solid black;
+                padding: 0.25em;
+                cursor: pointer;
+            }
+            .template:hover {
+                background: #D0E0F0;
+            }
+        </style>
+    </head>
+    <body id="container">
+        <div id="panel-left">
+            <svg id="avatar" xmlns="http://www.w3.org/2000/svg"
+                xmlns:xlink="http://www.w3.org/1999/xlink"
+                width="512" height="512" viewBox="0 0 256 256">
+                <style>
+                    :root {
+                        --color-stroke: black;
+                        --color-text: black;
+                        --color-fill: white;
+                    }
+                    rect, circle {
+                        stroke: var(--color-stroke);
+                        fill: var(--color-fill);
+                    }
+                    text {
+                        fill: var(--color-text);
+                    }
+                    #periodic-number {
+                        font: 32px sans-serif;
+                    }
+                    #periodic-name {
+                        font: 128px sans-serif;
+                    }
+                    #periodic-description {
+                        font: 48px sans-serif;
+                    }
+                    #periodic-weight {
+                        font: 28px sans-serif;
+                    }
+                </style>
+                <rect id="periodic-square" x="2" y="2" width="252" height="252" stroke-width="4" />
+                <circle id="periodic-circle" cx="128" cy="128" r="126" stroke="black" stroke-width="4" fill="white" />
+                <text id="periodic-number" class="background" x="16" y="16" dominant-baseline="hanging" text-anchor="left">36</text>
+                <text id="periodic-name" class="background" x="50%" y="152" dominant-baseline="auto" text-anchor="middle">Rw</text>
+                <text id="periodic-description" class="background" x="50%" y="164" dominant-baseline="hanging" text-anchor="middle">Krypton</text>
+                <text id="periodic-weight" class="background" x="50%" y="240" dominant-baseline="auto" text-anchor="middle">83.789</text>
+            </svg>
+            <image id="preview" title="Right click image to save via context menu" />
+        </div>
+        <div id="panel-right">
+            <table border="0">
+                <tr>
+                    <td>Apply Template:</td>
+                    <td>
+                        <a class="template" onclick="load('helium')">He</a>
+                        <a class="template" onclick="load('neon')">Ne</a>
+                        <a class="template" onclick="load('argon')">Ar</a>
+                        <a class="template" onclick="load('krypton')">Kr</a>
+                        <a class="template" onclick="load('xenon')">Xe</a>
+                        <a class="template" onclick="load('radon')">Rn</a>
+                        <a href="https://ptable.com/image/periodic-table.svg" target="_blank" title="Periodic Table">more</a>
+                    </td>
+                </tr>
+                <tr>
+                    <td>Shape:</td>
+                    <td>
+                        <label><input name="avatar-design" type="radio" value="square" onchange="preview()" checked /> Square</label>
+                        <label><input name="avatar-design" type="radio" value="circle" onchange="preview()"/> Circle</label>
+                    </td>
+                </tr>
+                <tr>
+                    <td>Name:</td>
+                    <td><input id="avatar-name" type="text" value="E" oninput="preview()" /></td>
+                </tr>
+                <tr>
+                    <td>Team:</td>
+                    <td><input id="avatar-team" type="text" value="Element" oninput="preview()" /></td>
+                </tr>
+                <tr>
+                    <td>Atomic Number:</td>
+                    <td><input id="avatar-number" type="text" value="0" oninput="preview()" /></td>
+                </tr>
+                <tr>
+                    <td>Atomic Weight:</td>
+                    <td><input id="avatar-weight" type="text" value="0.0000" oninput="preview()" /></td>
+                </tr>
+                <tr>
+                    <td>Colors:</td>
+                    <td>
+                        <input id="avatar-color-stroke" type="color" value="#000000" title="Stroke" oninput="preview()" />
+                        <input id="avatar-color-text" type="color" value="#000000" title="Text" oninput="preview()" />
+                        <input id="avatar-color-fill" type="color" value="#FFFFFF" title="Fill" oninput="preview()" />
+                    </td>
+                </tr>
+            </table>
+        </div>
+        <div id="spacer"></div>
+    </body>
+</html>
